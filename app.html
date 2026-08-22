@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Focus Timer</title>
+
+<style>
+ @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Work+Sans:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #16211c;
+    --surface: #1e2b24;
+    --surface-raised: #263a30;
+    --line: #33473b;
+    --text: #eef0ea;
+    --text-dim: #9db2a4;
+    --brass: #c9a26d;
+    --brass-bright: #e0bd88;
+    --break-red: #d9695f;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Work Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--brass-bright);
+    outline-offset: 3px;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 380px;
+    text-align: center;
+  }
+
+  .eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 28px;
+  }
+
+  /* ---------- Mode tabs ---------- */
+  .tabs {
+    display: inline-flex;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px;
+    margin-bottom: 40px;
+  }
+
+  .tab {
+    font-family: 'Work Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dim);
+    background: none;
+    border: none;
+    padding: 9px 18px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .tab.active {
+    background: var(--brass);
+    color: #16211c;
+  }
+
+  /* ---------- Signature: brass dial ---------- */
+  .dial-wrap {
+    position: relative;
+    width: 280px;
+    height: 280px;
+    margin: 0 auto 36px;
+  }
+
+  .dial-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+
+  .dial-track {
+    fill: none;
+    stroke: var(--surface);
+    stroke-width: 10;
+  }
+
+  .dial-ticks line {
+    stroke: var(--line);
+    stroke-width: 2;
+  }
+
+  .dial-progress {
+    fill: none;
+    stroke: var(--brass);
+    stroke-width: 10;
+    stroke-linecap: round;
+    stroke-dasharray: 754;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 1s linear;
+  }
+
+  .dial-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .time {
+    font-family: 'Space Mono', monospace;
+    font-size: 56px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .time-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--brass);
+    margin-top: 8px;
+  }
+
+  /* ---------- Controls ---------- */
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 36px;
+  }
+
+  .btn-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    color: var(--text-dim);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+  }
+
+  .btn-icon:hover { border-color: var(--brass); color: var(--brass-bright); }
+  .btn-icon:active { transform: scale(0.94); }
+
+  .btn-primary {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    background: var(--brass);
+    border: none;
+    color: #16211c;
+    font-size: 22px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+
+  .btn-primary:hover { background: var(--brass-bright); }
+  .btn-primary:active { transform: scale(0.96); }
+
+  /* ---------- Session tally ---------- */
+  .tally-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+  }
+
+  .tally-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .tally-marks { display: flex; gap: 6px; }
+
+  .tally-mark {
+    width: 4px;
+    height: 18px;
+    border-radius: 2px;
+    background: var(--line);
+  }
+
+  .tally-mark-done { background: var(--brass); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="app">
+    <div class="eyebrow">Focus Timer</div>
+
+    <div class="tabs">
+      <button class="tab active">Focus</button>
+      <button class="tab">Short break</button>
+      <button class="tab">Long break</button>
+    </div>
+
+    <div class="dial-wrap">
+      <svg class="dial-svg" viewBox="0 0 260 260">
+        <circle class="dial-track" cx="130" cy="130" r="120"></circle>
+        <circle class="dial-progress" id="progress-circle" cx="130" cy="130" r="120"></circle>
+      </svg>
+      <div class="dial-center">
+        <div class="time" id="timeDisplay">0:00</div>
+        <div class="time-label" id="session-label">Session 1</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn-icon" id="resetBtn" onclick="reset()" aria-label="Reset">↺</button>
+      <button class="btn-primary" id="startPauseBtn" onclick="startPause()" aria-label="Pause">▶</button>
+      <button class="btn-icon" id="skipBtn" onclick="skip()" aria-label="Skip">⏭</button>
+    </div>
+
+    <div class="tally-row">
+      <span class="tally-label">Today</span>
+      <div class="tally-marks">
+        <div class="tally-mark"></div>
+        <div class="tally-mark"></div>
+        <div class="tally-mark"></div>
+        <div class="tally-mark"></div>
+        <div class="tally-mark"></div>
+        <div class="tally-mark"></div>
+        <div class="tally-mark"></div>
+        <div class="tally-mark"></div>
+      </div>
+    </div>
+  </div>
+
+
+
+
+
+
+
+
+<!-- ------------------------------------------------------------------------------ -->
+
+<script>
+// progress circle properties:
+let progressCircle = document.getElementById("progress-circle")
+const circumference = 754
+
+// timer:
+const totalTime = 25
+let timeLeft = totalTime * 60
+const timeDisplay = document.getElementById("timeDisplay")
+let timer = null
+let progress = 0
+
+// minutes and seconds:
+let seconds = 60
+let minutes = totalTime
+if (seconds == 60) {
+    timeDisplay.innerHTML = totalTime + ":00"
+}
+
+// buttons:
+const startPauseBtn = document.getElementById("startPauseBtn")
+let start = false
+const resetBtn = document.getElementById("resetBtn")
+const skipBtn = document.getElementById("skipBtn")
+
+// sessions:
+let sessions = 1
+let userTime = 0
+let userTimeHours = 0
+let userTimeMinutes = 0
+let sessionLabel = document.getElementById("session-label")
+
+// break time:
+const shortBreakTime = 5
+const longBreakTime = 30
+let breakTimeTotalTime = 0
+let breakTimeTimer = null
+let requiredBreakTime = 0
+
+// Marks:
+const tallyMarks = document.querySelectorAll(".tally-mark")
+
+// Tabs:
+const tabs = document.querySelectorAll(".tab")
+let tabIndex = 0
+
+// starting, pausing, reseting, skipping timer:
+// start and pause:
+function startPause() {
+
+    if (start == false) {
+        start = true
+        startPauseBtn.innerHTML = "❚❚"
+        timer = setInterval(tick, 1000)
+        update()
+    } else {
+        start = false
+        startPauseBtn.innerHTML = "▶"
+        clearInterval(timer)
+        update()
+    }
+}
+
+function tick() {
+
+    if (start == true) {
+        timeLeft -= 1
+        progress = timeLeft / (totalTime * 60)
+        progressCircle.style.strokeDashoffset = circumference * (1 - progress)
+        
+        
+        if (minutes >= 0 && seconds >= 0) {
+            if (seconds >= 1 && seconds != 60) {
+                seconds -= 1
+            } else {
+                minutes -= 1
+                seconds = 59
+            }
+        }
+        
+        if (seconds > 9) {
+            timeDisplay.innerHTML = minutes + ":" + seconds
+        } else {
+            timeDisplay.innerHTML = minutes + ":0" + seconds
+        }
+
+        if (minutes == 0 && seconds == 0) {
+            reset()
+            checkBreakTime()
+            update()
+            if (sessions != 4 && sessions != 8) {
+                sessions += 1
+            }
+        }
+    sessionLabel.innerHTML = "Session " + sessions
+    }
+}
+
+// reset:
+function reset() {
+
+    clearInterval(timer)
+    update()
+    start = false
+    seconds = 60
+    timeLeft = totalTime * 60
+    minutes = totalTime
+    progress = 0
+    progressCircle.style.strokeDashoffset = 0
+    progressCircle.style.stroke = "var(--brass)"
+    timeDisplay.style.fontSize = 56 + "px"
+    timeDisplay.innerHTML = minutes + ":00"
+    startPauseBtn.innerHTML = "▶"
+    startPauseBtn.disabled = false
+    resetBtn.disabled = false
+    skipBtn.disabled = false
+}
+
+// skip timer:
+function skip() {
+
+    reset()
+    if (sessions < 8) {
+        sessions += 1
+    }
+    update()
+}
+
+// getting user's real time:
+setInterval(function() {
+    userTime = new Date()
+    userTimeHours = Math.floor(userTime.getHours() - 12)
+    userTimeMinutes = userTime.getMinutes()
+}, 1000)
+
+// check break time:
+function checkBreakTime() {
+
+    if (sessions == 4) {
+        breakTimeTimer = setInterval(breakTimeTick, 1000)
+        timeLeft = shortBreakTime * 60
+        breakTimeTotalTime = shortBreakTime
+        minutes = shortBreakTime
+        seconds = 60
+
+        startPauseBtn.disabled = true
+        resetBtn.disabled = true
+        skipBtn.disabled = true
+
+        requiredBreakTime = (userTimeMinutes + 5) % 60
+        progressCircle.style.strokeDashoffset = 0
+        progressCircle.style.stroke = "#4a5ec5"
+
+        tabIndex = 1
+        update()
+    } else if (sessions < 4 && sessions >= 1) {
+        clearInterval(breakTimeTimer)
+        startPauseBtn.disabled = false
+        resetBtn.disabled = false
+        skipBtn.disabled = false
+        tabIndex = 0
+        update()
+    }
+
+    else if (sessions == 8) {
+        breakTimeTimer = setInterval(breakTimeTick, 1000)
+        timeLeft = longBreakTime * 60
+        breakTimeTotalTime = longBreakTime
+        minutes = longBreakTime
+        seconds = 60
+
+        startPauseBtn.disabled = true
+        resetBtn.disabled = true
+        skipBtn.disabled = true
+
+        requiredBreakTime = (userTimeMinutes + 30) % 60
+        progressCircle.style.strokeDashoffset = 0
+        progressCircle.style.stroke = "#4a5ec5"
+
+        tabIndex = 2
+        update()
+    } else if (sessions >= 4 && sessions < 8) {
+        clearInterval(breakTimeTimer)
+        startPauseBtn.disabled = false
+        resetBtn.disabled = false
+        skipBtn.disabled = false
+        tabIndex = 0
+        update()
+    }
+}
+
+function breakTimeTick() {
+        
+    if (userTimeMinutes != requiredBreakTime) {
+        timeLeft -= 1
+        progress = timeLeft / (breakTimeTotalTime * 60)
+        progressCircle.style.strokeDashoffset = circumference * (1 - progress)
+        timeDisplay.style.fontSize = 30 + "px"
+
+        if (requiredBreakTime > 9) { 
+        timeDisplay.innerHTML = "(Break)<br>Come back at " + userTimeHours + ":" + requiredBreakTime
+        sessionLabel.innerHTML = "Session " + sessions
+    } else {
+        timeDisplay.innerHTML = "(Break)<br>Come back at " + userTimeHours + ":0" + requiredBreakTime
+    }
+} else {
+
+    reset()
+    clearInterval(breakTimeTimer)
+    if (sessions == 4) {
+        sessions = 5
+    } else {
+        sessions = 0
+    }
+    update()
+    tabIndex = 0
+}
+}
+
+function updateTallyMarks() {
+
+    tallyMarks.forEach((mark, index) => {
+        if (index < sessions) {
+            mark.classList.add("tally-mark-done")
+        } else {
+            mark.classList.remove("tally-mark-done")
+        }
+    })
+}
+
+function updateTabs() {
+
+    tabs.forEach((tab, index) => {
+        if (index == tabIndex) {
+            tab.classList.add("active")
+        } else {
+            tab.classList.remove("active")
+        }
+    })
+}
+
+// Updates:
+function update() {
+    updateTallyMarks()
+    updateTabs()
+}
+</script>
+
+</body>
+</html>
