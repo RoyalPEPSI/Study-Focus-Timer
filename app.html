@@ -360,8 +360,9 @@ function tick() {
             reset()
             checkBreakTime()
             update()
-            if (sessions != 4 && sessions != 8) {
-                sessions += 1
+
+            if (sessions < 8) {
+            sessions += 1
             }
         }
     sessionLabel.innerHTML = "Session " + sessions
@@ -401,14 +402,14 @@ function skip() {
 // getting user's real time:
 setInterval(function() {
     userTime = new Date()
-    userTimeHours = Math.floor(userTime.getHours() - 12)
+    userTimeHours = Math.abs(Math.floor(userTime.getHours() - 12))
     userTimeMinutes = userTime.getMinutes()
 }, 1000)
 
 // check break time:
 function checkBreakTime() {
 
-    if (sessions == 4) {
+    if (sessions % 4 != 0) {
         breakTimeTimer = setInterval(breakTimeTick, 1000)
         timeLeft = shortBreakTime * 60
         breakTimeTotalTime = shortBreakTime
@@ -425,16 +426,7 @@ function checkBreakTime() {
 
         tabIndex = 1
         update()
-    } else if (sessions < 4 && sessions >= 1) {
-        clearInterval(breakTimeTimer)
-        startPauseBtn.disabled = false
-        resetBtn.disabled = false
-        skipBtn.disabled = false
-        tabIndex = 0
-        update()
-    }
-
-    else if (sessions == 8) {
+    } else {
         breakTimeTimer = setInterval(breakTimeTick, 1000)
         timeLeft = longBreakTime * 60
         breakTimeTotalTime = longBreakTime
@@ -450,13 +442,6 @@ function checkBreakTime() {
         progressCircle.style.stroke = "#4a5ec5"
 
         tabIndex = 2
-        update()
-    } else if (sessions >= 4 && sessions < 8) {
-        clearInterval(breakTimeTimer)
-        startPauseBtn.disabled = false
-        resetBtn.disabled = false
-        skipBtn.disabled = false
-        tabIndex = 0
         update()
     }
 }
@@ -479,13 +464,11 @@ function breakTimeTick() {
 
     reset()
     clearInterval(breakTimeTimer)
-    if (sessions == 4) {
-        sessions = 5
-    } else {
-        sessions = 0
+    if (sessions == 8) {
+      sessions = 1
     }
-    update()
     tabIndex = 0
+    update()
 }
 }
 
